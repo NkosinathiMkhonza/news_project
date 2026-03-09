@@ -171,7 +171,86 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
+## Running with a Virtual Environment (venv)
+
+1. **Create a virtual environment** in the project root:
+   ```bash
+   python -m venv venv
+   ```
+
+2. **Activate** the virtual environment:
+   - Windows: `venv\Scripts\activate`
+   - macOS/Linux: `source venv/bin/activate`
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables** – copy the example and edit:
+   ```bash
+   cp .env.example .env
+   # Edit .env and set SECRET_KEY, ACTIVE_DATABASE, etc.
+   ```
+   > **Note:** Never commit your `.env` file. It is already excluded by `.gitignore`.
+
+5. **Apply migrations and start the server**:
+   ```bash
+   python manage.py migrate
+   python manage.py createsuperuser  # optional
+   python manage.py runserver
+   ```
+
+## Running with Docker
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed and running.
+
+### Steps
+
+1. **Create your `.env` file** from the example:
+   ```bash
+   cp .env.example .env
+   ```
+   Set at minimum:
+   ```env
+   SECRET_KEY=your-strong-secret-key
+   DEBUG=True
+   ACTIVE_DATABASE=sqlite
+   ALLOWED_HOSTS=localhost,127.0.0.1
+   ```
+   > **Important:** Do **not** commit real secrets to a public repository.
+   > The `.env` file is excluded by `.gitignore`. Supply your own values.
+
+2. **Build the Docker image**:
+   ```bash
+   docker build -t news_project .
+   ```
+
+3. **Run the container**:
+   ```bash
+   docker run --env-file .env -p 8000:8000 news_project
+   ```
+
+   Or, using Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+
+4. Visit `http://localhost:8000` in your browser.
+
+## Documentation
+
+User-friendly HTML documentation generated with Sphinx is stored in [`docs/_build/html/`](docs/_build/html/index.html).  
+To rebuild the docs locally:
+
+```bash
+cd docs
+make html
+```
+
 ## Notes
 
-- The project includes design assets in [Design_Digrams/README.md](/c:/Users/DJ%20CHLORINE/Documents/news_project/Design_Digrams/README.md).
+- The project includes design assets in [`Design_Digrams/README.md`](Design_Digrams/README.md).
 - For production, set a strong `SECRET_KEY`, turn `DEBUG` off, and configure `ALLOWED_HOSTS`.
