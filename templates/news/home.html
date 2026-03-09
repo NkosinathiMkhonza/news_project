@@ -1,0 +1,47 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Home - News Application{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2 class="mb-4"><i class="bi bi-newspaper"></i> Latest News</h2>
+        {% for article in articles %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title"><a href="{% url 'news:article_detail' article.pk %}">{{ article.title }}</a></h5>
+                <p class="card-text text-muted">{{ article.excerpt|default:article.content|truncatewords:30 }}</p>
+                <small class="text-muted">
+                    By <a href="{% url 'news:journalist_detail' article.author.username %}">{{ article.author.username }}</a>
+                    | {{ article.published_at|date:"M d, Y" }}
+                </small>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">No articles published yet.</div>
+        {% endfor %}
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white"><h5 class="mb-0">Categories</h5></div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for category in categories %}
+                    <li class="list-group-item"><a href="{% url 'news:article_list' %}?category={{ category.slug }}">{{ category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header bg-success text-white"><h5 class="mb-0">Publishers</h5></div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for publisher in publishers %}
+                    <li class="list-group-item"><a href="{% url 'news:publisher_detail' publisher.slug %}">{{ publisher.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

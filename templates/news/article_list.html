@@ -1,0 +1,30 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Articles{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Articles</h2>
+<div class="row">
+    {% for article in articles %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                {% if article.category %}
+                <span class="badge bg-primary mb-2">{{ article.category.name }}</span>
+                {% endif %}
+                <h5 class="card-title"><a href="{% url 'news:article_detail' article.pk %}">{{ article.title }}</a></h5>
+                <p class="card-text small">{{ article.excerpt|truncatewords:15 }}</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">
+                    <a href="{% url 'news:journalist_detail' article.author.username %}">{{ article.author.username }}</a>
+                    | {{ article.published_at|date:"M d" }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12"><div class="alert alert-info">No articles found.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

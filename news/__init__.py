@@ -1,0 +1,3 @@
+"""News application package."""
+
+default_app_config = "news.apps.NewsConfig"

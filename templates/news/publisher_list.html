@@ -1,0 +1,25 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Publishers{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Publishers</h2>
+<div class="row">
+    {% for publisher in publishers %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ publisher.name }}</h5>
+                <p class="card-text small">{{ publisher.description|truncatewords:15 }}</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{{ publisher.get_subscriber_count }} subscribers</small>
+                <a href="{% url 'news:publisher_detail' publisher.slug %}" class="btn btn-sm btn-outline-primary float-end">View</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12"><div class="alert alert-info">No publishers yet.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

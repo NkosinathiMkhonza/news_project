@@ -1,0 +1,59 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Reader Dashboard</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white"><h5 class="mb-0">My Subscriptions</h5></div>
+            <div class="card-body">
+                {% for sub in subscriptions %}
+                <p class="mb-2">
+                    {% if sub.target_type == 'publisher' %}
+                    <a href="{% url 'news:publisher_detail' sub.publisher.slug %}">{{ sub.target_name }}</a>
+                    <span class="badge bg-secondary">Publisher</span>
+                    {% else %}
+                    <a href="{% url 'news:journalist_detail' sub.journalist.username %}">{{ sub.target_name }}</a>
+                    <span class="badge bg-info text-dark">Journalist</span>
+                    {% endif %}
+                </p>
+                {% empty %}
+                <p class="text-muted">No subscriptions yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white"><h5 class="mb-0">Notifications</h5></div>
+            <div class="card-body">
+                {% for notification in notifications %}
+                <p class="mb-2">
+                    <a href="{% url 'news:article_detail' notification.article.pk %}">{{ notification.article.title }}</a><br>
+                    <small class="text-muted">{{ notification.created_at|date:"M d, Y" }}</small>
+                </p>
+                {% empty %}
+                <p class="text-muted">No notifications yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark"><h5 class="mb-0">My Comments</h5></div>
+            <div class="card-body">
+                {% for comment in comments %}
+                <p class="mb-2">
+                    <small>On: <a href="{% url 'news:article_detail' comment.article.pk %}">{{ comment.article.title }}</a></small><br>
+                    {{ comment.content|truncatewords:10 }}
+                </p>
+                {% empty %}
+                <p class="text-muted">No comments yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

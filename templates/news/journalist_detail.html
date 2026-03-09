@@ -1,0 +1,35 @@
+{% extends 'news/base.html' %}
+
+{% block title %}{{ journalist.username }}{% endblock %}
+
+{% block content %}
+<h1>{{ journalist.username }}</h1>
+<p class="text-muted">{{ journalist.journalist_subscriptions.count }} subscribers</p>
+{% if can_subscribe %}
+    {% if is_subscribed %}
+    <form method="post" action="{% url 'news:unsubscribe_journalist' journalist.username %}">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger">Unsubscribe</button>
+    </form>
+    {% else %}
+    <form method="post" action="{% url 'news:subscribe_journalist' journalist.username %}">
+        {% csrf_token %}
+        <button class="btn btn-success">Subscribe</button>
+    </form>
+    {% endif %}
+{% endif %}
+<hr>
+<h3>Published Articles</h3>
+{% for article in articles %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5><a href="{% url 'news:article_detail' article.pk %}">{{ article.title }}</a></h5>
+        <small class="text-muted">
+            {{ article.publisher.name }} | {{ article.published_at|date:"M d, Y" }}
+        </small>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted">No published articles yet.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,66 @@
+================================================================================
+                    CRUD MATRIX - NEWS APPLICATION
+================================================================================
+
+Legend
+  R = Reader
+  J = Journalist
+  E = Editor
+  A = Admin (Django admin / staff)
+  * = Own records only
+  System = Created or managed automatically by application logic
+
+================================================================================
+                               ENTITY ACCESS
+================================================================================
+
++---------------+----------------------+----------------------+----------------------+----------------------+
+| Entity        | Create               | Read                 | Update               | Delete               |
++---------------+----------------------+----------------------+----------------------+----------------------+
+| UserProfile   | System on register   | Owner, Admin         | Owner, Admin         | Admin                |
+| Article       | J                    | Public (published),  | J* (draft/rejected), | E, Admin             |
+|               |                      | author/editor preview| E, Admin             |                      |
+| Category      | Admin, System        | Public               | Admin                | Admin                |
+| Comment       | R                    | Public on published  | Admin                | Admin                |
+| Publisher     | E                    | Public               | Admin                | Admin                |
+| Subscription  | R                    | Owner                | N/A                  | Owner, Admin         |
+| Notification  | System               | Owner                | Owner (mark read),   | Owner, Admin         |
+|               |                      |                      | Admin                |                      |
+| ResetToken    | System               | System, Admin        | System               | System, Admin        |
+| Newsletter    | Admin                | Admin                | Admin                | Admin                |
++---------------+----------------------+----------------------+----------------------+----------------------+
+
+================================================================================
+                            IMPLEMENTED WORKFLOW NOTES
+================================================================================
+
+ARTICLE
+  - Journalists create articles in draft status.
+  - Journalists can edit only their own draft or rejected articles.
+  - Journalists submit their own articles for editorial review.
+  - Editors can preview, edit, approve, reject, or delete articles.
+  - Published articles are visible to the public.
+
+COMMENT
+  - Only readers can post comments.
+  - Comments are allowed only on published articles.
+  - No public edit/delete UI is implemented for comments.
+
+PUBLISHER
+  - Publishers are organizations, not a separate application role.
+  - Only editors create publishers through the application UI.
+
+SUBSCRIPTION
+  - Only readers can subscribe or unsubscribe.
+  - A subscription targets either one publisher or one journalist.
+  - Readers can view their own subscriptions.
+
+NOTIFICATION
+  - Notifications are created automatically when a subscribed article is published.
+  - Readers view notifications from the reader dashboard.
+
+NEWSLETTER
+  - A newsletter model exists in the admin.
+  - No dedicated public newsletter workflow is implemented in the current UI.
+
+================================================================================

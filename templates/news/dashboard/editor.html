@@ -1,0 +1,107 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Editor Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Editor Dashboard</h2>
+    <a href="{% url 'news:create_publisher' %}" class="btn btn-primary">Create Publisher</a>
+</div>
+
+<div class="alert alert-info">{{ pending_articles.count }} articles pending review.</div>
+<table class="table mb-5">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Publisher</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for article in pending_articles %}
+        <tr>
+            <td>{{ article.title }}</td>
+            <td>{{ article.author.username }}</td>
+            <td>{{ article.publisher.name }}</td>
+            <td>{{ article.updated_at|date:"M d, Y" }}</td>
+            <td>
+                <a href="{% url 'news:article_preview' article.pk %}" class="btn btn-sm btn-outline-primary">Preview</a>
+                <a href="{% url 'news:edit_article' article.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <a href="{% url 'news:approve_article' article.pk %}" class="btn btn-sm btn-outline-success">Approve</a>
+                <a href="{% url 'news:reject_article' article.pk %}" class="btn btn-sm btn-outline-danger">Reject</a>
+                <form method="post" action="{% url 'news:delete_article' article.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-dark">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center">No pending articles.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 class="mb-3">Article Management</h3>
+<table class="table mb-5">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Author</th>
+            <th>Publisher</th>
+            <th>Reviewed By</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for article in managed_articles %}
+        <tr>
+            <td>{{ article.title }}</td>
+            <td>
+                <span class="badge bg-{% if article.status == 'published' %}success{% elif article.status == 'pending' %}warning{% elif article.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                    {{ article.status }}
+                </span>
+            </td>
+            <td>{{ article.author.username }}</td>
+            <td>{{ article.publisher.name }}</td>
+            <td>{{ article.reviewed_by.username|default:"Not reviewed" }}</td>
+            <td>
+                <a href="{% url 'news:article_preview' article.pk %}" class="btn btn-sm btn-outline-primary">Preview</a>
+                <a href="{% url 'news:edit_article' article.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                {% if article.status == 'pending' %}
+                <a href="{% url 'news:approve_article' article.pk %}" class="btn btn-sm btn-outline-success">Approve</a>
+                <a href="{% url 'news:reject_article' article.pk %}" class="btn btn-sm btn-outline-danger">Reject</a>
+                {% endif %}
+                <form method="post" action="{% url 'news:delete_article' article.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-dark">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center">No articles available yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 class="mb-3">Publishers</h3>
+<div class="row">
+    {% for publisher in publishers %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ publisher.name }}</h5>
+                <p class="card-text small">{{ publisher.description|default:"No description yet."|truncatewords:18 }}</p>
+                <small class="text-muted">Created by {{ publisher.created_by.username }}</small>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-warning mb-0">No publishers exist yet. Create one before journalists start submitting articles.</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

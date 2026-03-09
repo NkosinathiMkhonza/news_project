@@ -1,0 +1,58 @@
+{% extends 'news/base.html' %}
+
+{% block title %}My Articles{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Journalist Dashboard</h2>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><h3>{{ draft_count }}</h3><small>Drafts</small></div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><h3>{{ pending_count }}</h3><small>Pending</small></div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><h3>{{ published_count }}</h3><small>Published</small></div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><a href="{% url 'news:create_article' %}" class="btn btn-primary">New Article</a></div></div>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Publisher</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for article in articles %}
+        <tr>
+            <td>{{ article.title }}</td>
+            <td>{{ article.publisher.name }}</td>
+            <td>
+                <span class="badge bg-{% if article.status == 'published' %}success{% elif article.status == 'pending' %}warning{% elif article.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                    {{ article.status }}
+                </span>
+            </td>
+            <td>{{ article.created_at|date:"M d, Y" }}</td>
+            <td>
+                <a href="{% url 'news:article_preview' article.pk %}" class="btn btn-sm btn-outline-primary">Preview</a>
+                {% if article.status == 'draft' or article.status == 'rejected' %}
+                <a href="{% url 'news:edit_article' article.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <form method="post" action="{% url 'news:submit_article' article.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-success">Submit</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center">No articles yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

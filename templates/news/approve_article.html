@@ -1,0 +1,29 @@
+{% extends 'news/base.html' %}
+
+{% block title %}Review Article{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>{{ article.title }}</h2>
+        <p class="text-muted">By {{ article.author.username }}</p>
+        <div class="mb-4">{{ article.content|linebreaks }}</div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Review Actions</h5></div>
+            <div class="card-body">
+                <form method="post" action="{% url 'news:approve_article' article.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success w-100 mb-2">Approve</button>
+                </form>
+                <form method="post" action="{% url 'news:reject_article' article.pk %}">
+                    {% csrf_token %}
+                    <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Rejection reason (optional)"></textarea>
+                    <button type="submit" class="btn btn-danger w-100">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
