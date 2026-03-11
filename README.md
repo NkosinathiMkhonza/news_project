@@ -220,8 +220,6 @@ python manage.py migrate
    ACTIVE_DATABASE=sqlite
    ALLOWED_HOSTS=localhost,127.0.0.1
    ```
-   > **Important:** Do **not** commit real secrets to a public repository.
-   > The `.env` file is excluded by `.gitignore`. Supply your own values.
 
 2. **Build the Docker image**:
    ```bash
