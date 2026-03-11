@@ -277,7 +277,7 @@ class Subscription(models.Model):
                 name="unique_reader_journalist_subscription",
             ),
             models.CheckConstraint(
-                check=(
+                condition=(
                     Q(publisher__isnull=False, journalist__isnull=True)
                     | Q(publisher__isnull=True, journalist__isnull=False)
                 ),

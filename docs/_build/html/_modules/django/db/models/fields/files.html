@@ -36,15 +36,18 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">django</span><span class="w"> </span><span class="kn">import</span> <span class="n">forms</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">checks</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">django.core.files.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">File</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.core.files.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContentFile</span><span class="p">,</span> <span class="n">File</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core.files.images</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core.files.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">default_storage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core.files.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_file_name</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.db.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">signals</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.db.models.expressions</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatabaseDefault</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.db.models.fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.db.models.query_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeferredAttribute</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.db.models.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">AltersData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils.translation</span><span class="w"> </span><span class="kn">import</span> <span class="n">gettext_lazy</span> <span class="k">as</span> <span class="n">_</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.utils.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">PY311</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">FieldFile</span><span class="p">(</span><span class="n">File</span><span class="p">,</span> <span class="n">AltersData</span><span class="p">):</span>
@@ -121,10 +124,13 @@
     <span class="c1"># to further manipulate the underlying file, as well as update the</span>
     <span class="c1"># associated model instance.</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_instance_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attname</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">generate_filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">max_length</span><span class="p">)</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_instance_attribute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_committed</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="c1"># Save the object because it has changed, unless save is False</span>
@@ -223,6 +229,12 @@
         <span class="c1"># handle None.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attr_class</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+            <span class="n">instance</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attname</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span>
+
+        <span class="c1"># If this value is a DatabaseDefault, initialize the attribute class</span>
+        <span class="c1"># for this field with its db_default value.</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">DatabaseDefault</span><span class="p">):</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attr_class</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">db_default</span><span class="p">)</span>
             <span class="n">instance</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attname</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span>
 
         <span class="c1"># Other types of files may be assigned as well, but they need to have</span>
@@ -345,6 +357,15 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">pre_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">,</span> <span class="n">add</span><span class="p">):</span>
         <span class="n">file</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">pre_save</span><span class="p">(</span><span class="n">model_instance</span><span class="p">,</span> <span class="n">add</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="n">FieldError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;File for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> must have &quot;</span>
+                <span class="s2">&quot;the name attribute specified to be saved.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">PY311</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">_file</span><span class="p">,</span> <span class="n">ContentFile</span><span class="p">):</span>
+                <span class="n">exc</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="s2">&quot;Pass a &#39;name&#39; argument to ContentFile.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+
         <span class="k">if</span> <span class="n">file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">_committed</span><span class="p">:</span>
             <span class="c1"># Commit the file to storage prior to saving the model</span>
             <span class="n">file</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">file</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -413,6 +434,12 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ImageFieldFile</span><span class="p">(</span><span class="n">ImageFile</span><span class="p">,</span> <span class="n">FieldFile</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_instance_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attname</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+        <span class="c1"># Update the name in case generate_filename() or storage.save() changed</span>
+        <span class="c1"># it, but bypass the descriptor to avoid re-reading the file.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">attname</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="c1"># Clear the image dimensions cache</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dimensions_cache&quot;</span><span class="p">):</span>
@@ -474,7 +501,8 @@
         <span class="c1"># after their corresponding image field don&#39;t stay cleared by</span>
         <span class="c1"># Model.__init__, see bug #11196.</span>
         <span class="c1"># Only run post-initialization dimension update on non-abstract models</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">abstract</span><span class="p">:</span>
+        <span class="c1"># with width_field/height_field.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">abstract</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width_field</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_field</span><span class="p">):</span>
             <span class="n">signals</span><span class="o">.</span><span class="n">post_init</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_dimension_fields</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">cls</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_dimension_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -598,7 +626,7 @@
       &#169;2026, Developer.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.0.4</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
     </div>
