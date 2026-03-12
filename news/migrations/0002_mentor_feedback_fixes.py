@@ -99,7 +99,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="subscription",
             constraint=models.CheckConstraint(
-                check=(
+                condition=(
                     models.Q(
                         journalist__isnull=True,
                         publisher__isnull=False,
